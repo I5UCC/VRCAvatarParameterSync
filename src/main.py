@@ -29,6 +29,10 @@ def wait_get_oscquery_client():
         time.sleep(2) # Wait for discovery
         service_info = browser.find_service_by_name("VRChat")
     print("VRChat discovered!")
+    client = OSCQueryClient(service_info)
+    while client.query_node(osc_avatar_change) is None:
+        print("Waiting for VRChat to be ready...")
+        time.sleep(2)
     return OSCQueryClient(service_info)
 
 
@@ -115,3 +119,6 @@ oscqs = OSCQueryService("AvatarParameterSync", http_port, osc_server_port)
 oscqs.advertise_endpoint(osc_avatar_change, access="readwrite")
 for param in config["parameters"]:
     oscqs.advertise_endpoint(osc_parameter_prefix + param, access="readwrite")
+
+while True:
+    time.sleep(1)
