@@ -1,0 +1,18 @@
+{
+	"source": "builtin",
+	"applications": [
+		{
+			"app_key": "i5ucc.AvatarParameterSync",
+			"launch_type": "binary",
+			"binary_path_windows": "./AvatarParameterSync_NoConsole.exe",
+			"is_dashboard_overlay": true,
+
+			"strings": {
+				"en_us": {
+					"name": "AvatarParameterSync",
+					"description": "Syncs parameters between Avatars in VRChat"
+				}
+			}
+		}
+	]
+}
