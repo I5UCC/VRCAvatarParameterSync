@@ -140,6 +140,6 @@ oscqs.advertise_endpoint(AVATAR_CHANGE_PARAMETER, access="readwrite")
 for param in config["parameters"]:
     oscqs.advertise_endpoint(PARAMETER_PREFIX + param, access="readwrite")
 
-if len(params) > 0:
+if len(params) <= 0:
     print("You didn't set any parameters in the config.json file, please set some parameters and restart the program.")
 server_thread.join()
