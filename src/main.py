@@ -141,5 +141,5 @@ for param in config["parameters"]:
     oscqs.advertise_endpoint(PARAMETER_PREFIX + param, access="readwrite")
 
 if len(params) > 0:
-    print("You didn't set any parameters in ")
+    print("You didn't set any parameters in the config.json file, please set some parameters and restart the program.")
 server_thread.join()
