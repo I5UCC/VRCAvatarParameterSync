@@ -2,11 +2,14 @@ from pythonosc import dispatcher, osc_server, udp_client
 from tinyoscquery.queryservice import OSCQueryService
 from tinyoscquery.utility import get_open_tcp_port, get_open_udp_port, check_if_tcp_port_open, check_if_udp_port_open
 from tinyoscquery.query import OSCQueryBrowser, OSCQueryClient
+from threading import Thread
 from json import load
 import sys
 import os
-from threading import Thread, Lock
 import time
+import ctypes
+import zeroconf
+import traceback
 
 
 def get_absolute_path(relative_path, script_path=__file__) -> str:
@@ -23,14 +26,15 @@ def print_padded(parameter, value):
 
 def wait_get_oscquery_client():
     service_info = None
+    print("Waiting for VRChat to be discovered...")
     while service_info is None:
-        print("Waiting for VRChat to be discovered...")
+        print("Searching for VRChat...")
         browser = OSCQueryBrowser()
         time.sleep(2) # Wait for discovery
         service_info = browser.find_service_by_name("VRChat")
     print("VRChat discovered!")
     client = OSCQueryClient(service_info)
-    while client.query_node(osc_avatar_change) is None:
+    while client.query_node(AVATAR_CHANGE_PARAMETER) is None:
         print("Waiting for VRChat to be ready...")
         time.sleep(2)
     return OSCQueryClient(service_info)
@@ -39,10 +43,10 @@ def wait_get_oscquery_client():
 def reset_params():
     global params, curr_avatar, config
 
-    curr_avatar = qclient.query_node(osc_avatar_change).value[0]
+    curr_avatar = qclient.query_node(AVATAR_CHANGE_PARAMETER).value[0]
     print_padded("Current Avatar:", curr_avatar)
     for param in config["parameters"]:
-        addr = osc_parameter_prefix + param
+        addr = PARAMETER_PREFIX + param
         try:
             params[addr] = qclient.query_node(addr).value[0]
             print_padded(param, params[addr])
@@ -85,18 +89,17 @@ def osc_server_serve():
 
 
 config: dict = load(open(get_absolute_path("config.json", __file__)))
-osc_parameter_prefix = "/avatar/parameters/"
-osc_avatar_change = "/avatar/change"
-
-qclient = wait_get_oscquery_client()
-
-params = {}
-reset_params()
+PARAMETER_PREFIX = "/avatar/parameters/"
+AVATAR_CHANGE_PARAMETER = "/avatar/change"
+qclient: OSCQueryClient = None
+osc_client: udp_client.SimpleUDPClient = None
 avatar_changed = False
-
+params = {}
+osc_client_port = config["port"]
 osc_server_ip = config["ip"]
 osc_server_port = config["server_port"]
 http_port = config["http_port"]
+
 if osc_server_port != 9001:
     print("OSC Server port is not default, testing port availability and advertising OSCQuery endpoints")
     if osc_server_port <= 0 or not check_if_udp_port_open(osc_server_port):
@@ -106,19 +109,37 @@ if osc_server_port != 9001:
 else:
     print("OSC Server port is default.")
 
-osc_client = udp_client.SimpleUDPClient(osc_server_ip, config["port"])
-
 disp = dispatcher.Dispatcher()
-disp.map(osc_avatar_change, set_avatar_change)
+disp.map(AVATAR_CHANGE_PARAMETER, set_avatar_change)
 for param in config["parameters"]:
-    disp.map(osc_parameter_prefix + param, receive_message)
-server = osc_server.ThreadingOSCUDPServer((osc_server_ip, osc_server_port), disp)
-Thread(target=osc_server_serve, daemon=True).start()
+    disp.map(PARAMETER_PREFIX + param, receive_message)
+
+try:
+    osc_client = udp_client.SimpleUDPClient(osc_server_ip, osc_client_port)
+    qclient = wait_get_oscquery_client()
+    reset_params()
+    server = osc_server.ThreadingOSCUDPServer((osc_server_ip, osc_server_port), disp)
+    server_thread = Thread(target=osc_server_serve, daemon=True)
+    server_thread.start()
+except OSError as e:
+    if os.name == "nt":
+        ctypes.windll.user32.MessageBoxW(0, "You can only bind to the port 9001 once.", "AvatarParameterSync - Error", 0)
+    sys.exit(1)
+except zeroconf._exceptions.NonUniqueNameException as e:
+    print("NonUniqueNameException, trying again...")
+    os.execv(sys.executable, ['python'] + sys.argv)
+except Exception as e:
+    if os.name == "nt":
+        ctypes.windll.user32.MessageBoxW(0, traceback.format_exc(), "AvatarParameterSync - Unexpected Error", 0)
+    print(traceback.format_exc())
+    sys.exit(1)
+
 
 oscqs = OSCQueryService("AvatarParameterSync", http_port, osc_server_port)
-oscqs.advertise_endpoint(osc_avatar_change, access="readwrite")
+oscqs.advertise_endpoint(AVATAR_CHANGE_PARAMETER, access="readwrite")
 for param in config["parameters"]:
-    oscqs.advertise_endpoint(osc_parameter_prefix + param, access="readwrite")
+    oscqs.advertise_endpoint(PARAMETER_PREFIX + param, access="readwrite")
 
-while True:
-    time.sleep(1)
+if len(params) > 0:
+    print("You didn't set any parameters in ")
+server_thread.join()
