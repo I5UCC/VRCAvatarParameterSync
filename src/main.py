@@ -4,6 +4,7 @@ from tinyoscquery.utility import get_open_tcp_port, get_open_udp_port, check_if_
 from tinyoscquery.query import OSCQueryBrowser, OSCQueryClient
 from threading import Thread
 from json import load
+from psutil import process_iter
 import sys
 import os
 import time
@@ -24,19 +25,27 @@ def print_padded(parameter, value):
     print(f"{parameter.ljust(23, ' ')}\t{value}")
 
 
+def is_running() -> bool:
+        """Checks if VRChat is running."""
+        _proc_name = "VRChat.exe" if os.name == 'nt' else "VRChat"
+        return _proc_name in (p.name() for p in process_iter())
+
+
 def wait_get_oscquery_client():
     service_info = None
-    print("Waiting for VRChat to be discovered...")
+    print("Waiting for VRChat to be discovered.", end="")
     while service_info is None:
-        print("Searching for VRChat...")
+        print(".", end="")
         browser = OSCQueryBrowser()
         time.sleep(2) # Wait for discovery
         service_info = browser.find_service_by_name("VRChat")
-    print("VRChat discovered!")
+    print("\nVRChat discovered!")
     client = OSCQueryClient(service_info)
+    print("Waiting for VRChat to be ready.", end="")
     while client.query_node(AVATAR_CHANGE_PARAMETER) is None:
-        print("Waiting for VRChat to be ready...")
+        print(".", end="")
         time.sleep(2)
+    print("\nVRChat ready!")
     return OSCQueryClient(service_info)
 
 
@@ -115,6 +124,11 @@ for param in config["parameters"]:
     disp.map(PARAMETER_PREFIX + param, receive_message)
 
 try:
+    print("Waiting for VRChat to start.", end="")
+    while not is_running():
+        print(".", end="")
+        time.sleep(3)
+    print("\nVRChat started!")
     osc_client = udp_client.SimpleUDPClient(osc_server_ip, osc_client_port)
     qclient = wait_get_oscquery_client()
     reset_params()
@@ -142,4 +156,8 @@ for param in config["parameters"]:
 
 if len(params) <= 0:
     print("You didn't set any parameters in the config.json file, please set some parameters and restart the program.")
-server_thread.join()
+
+while is_running():
+    time.sleep(10)
+
+sys.exit(0)
