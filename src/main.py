@@ -135,6 +135,10 @@ try:
     server = osc_server.ThreadingOSCUDPServer((osc_server_ip, osc_server_port), disp)
     server_thread = Thread(target=osc_server_serve, daemon=True)
     server_thread.start()
+    oscqs = OSCQueryService("AvatarParameterSync", http_port, osc_server_port)
+    oscqs.advertise_endpoint(AVATAR_CHANGE_PARAMETER, access="readwrite")
+    for param in config["parameters"]:
+        oscqs.advertise_endpoint(PARAMETER_PREFIX + param, access="readwrite")
 except OSError as e:
     if os.name == "nt":
         ctypes.windll.user32.MessageBoxW(0, "You can only bind to the port 9001 once.", "AvatarParameterSync - Error", 0)
@@ -147,12 +151,6 @@ except Exception as e:
         ctypes.windll.user32.MessageBoxW(0, traceback.format_exc(), "AvatarParameterSync - Unexpected Error", 0)
     print(traceback.format_exc())
     sys.exit(1)
-
-
-oscqs = OSCQueryService("AvatarParameterSync", http_port, osc_server_port)
-oscqs.advertise_endpoint(AVATAR_CHANGE_PARAMETER, access="readwrite")
-for param in config["parameters"]:
-    oscqs.advertise_endpoint(PARAMETER_PREFIX + param, access="readwrite")
 
 if len(params) <= 0:
     print("You didn't set any parameters in the config.json file, please set some parameters and restart the program.")
