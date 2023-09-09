@@ -1,6 +1,6 @@
 from cx_Freeze import setup, Executable
 
-packages = ["pythonosc", "psutil", "zeroconf", "json", "threading", "time", "os", "sys", "ctypes", "traceback"]
+packages = ["pythonosc", "psutil", "zeroconf", "json", "threading", "time", "os", "sys", "ctypes", "traceback", "openvr"]
 file_include = ["config.json", "app.vrmanifest"]
 
 build_exe_options = {"packages": packages, "include_files": file_include, 'include_msvcr': True, 'optimize': 2}

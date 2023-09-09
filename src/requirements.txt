@@ -2,3 +2,4 @@ python_osc
 zeroconf
 requests
 psutil
+openvr

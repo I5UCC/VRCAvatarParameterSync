@@ -12,6 +12,7 @@ import ctypes
 import zeroconf
 import traceback
 import logging
+import openvr
 
 
 def get_absolute_path(relative_path, script_path=__file__) -> str:
@@ -143,6 +144,9 @@ for param in config["parameters"]:
     disp.map(PARAMETER_PREFIX + param, receive_message)
 
 try:
+    application = openvr.init(openvr.VRApplication_Utility)
+    openvr.VRApplications().addApplicationManifest(get_absolute_path("app.vrmanifest"))
+    logging.info("VRChat manifest added.")
     logging.info("Waiting for VRChat to start.")
     while not is_running():
         time.sleep(3)
