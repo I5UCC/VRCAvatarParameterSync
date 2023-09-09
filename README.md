@@ -2,3 +2,5 @@
 
 Syncs Parameters in between different Avatars.
 
+https://github.com/I5UCC/VRCAvatarParameterSync/assets/43730681/758ae0c2-b3a9-49a0-9faa-d6e411170f37
+
