@@ -11,5 +11,3 @@ e.g. `"parameters": ["Parameter1", "Parameter2", "Parameter3", "Parameter4"]`
 - Run the program and VRChat
 - Profit???
 - Clear OSC Config as always when something doesn't work :)
-
-If the `server_port` setting is set to 0, it tries to use OSCQuery, this currently is buggy and doesnt work correctly, please stick with using the default port for now.
