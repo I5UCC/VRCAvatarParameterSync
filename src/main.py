@@ -98,6 +98,7 @@ def receive_message(addr, value):
     if check_if_duplicate_message(addr, value):
         return
 
+    time.sleep(0.5)
     if avatar_changed:
         time.sleep(1)
         avatar_changed = False
@@ -153,7 +154,7 @@ try:
     osc_client = udp_client.SimpleUDPClient(osc_server_ip, osc_client_port)
     qclient = wait_get_oscquery_client()
     reset_params()
-    server = osc_server.BlockingOSCUDPServer((osc_server_ip, osc_server_port), disp)
+    server = osc_server.ThreadingOSCUDPServer((osc_server_ip, osc_server_port), disp)
     server_thread = Thread(target=osc_server_serve, daemon=True)
     server_thread.start()
     oscqs = OSCQueryService("AvatarParameterSync", http_port, osc_server_port)
