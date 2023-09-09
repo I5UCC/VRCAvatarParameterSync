@@ -7,7 +7,7 @@ build_exe_options = {"packages": packages, "include_files": file_include, 'inclu
 
 setup(
     name="AvatarParameterSync",
-    version="0.1",
+    version="0.2",
     description="Syncs parameters between Avatars in VRChat",
     options={"build_exe": build_exe_options},
     executables=[Executable("main.py", target_name="AvatarParameterSync.exe", base=False), Executable("main.py", target_name="AvatarParameterSync_NoConsole.exe", base="Win32GUI")],

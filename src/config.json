@@ -1,7 +1,7 @@
 {
   "ip": "127.0.0.1",
   "port": 9000,
-  "server_port": 9001,
+  "server_port": 0,
   "http_port": 0,
   "parameters": []
 }
