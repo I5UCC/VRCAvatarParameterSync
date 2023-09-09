@@ -98,7 +98,6 @@ def receive_message(addr, value):
     if check_if_duplicate_message(addr, value):
         return
 
-    time.sleep(0.5)
     if avatar_changed:
         time.sleep(1)
         avatar_changed = False
